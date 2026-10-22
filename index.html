@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Internal Tool</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a full-width "screen" band shows the proposed dashboard, then the build spec underneath. */
+:root{
+  --orange:#EF8B22; --blue:#0979C3;
+  --ground:#F2F1EF; --card:#FFFFFF; --card-2:#F8F7F5;
+  --ink:#27343D; --ink-2:#53575A; --ink-3:#7C8288;
+  --rule:#DFDCD8; --rule-2:#C9C5BF;
+  --good:#3E8A4F; --good-bg:#E5F1E7;
+  --warn:#B26A00; --warn-bg:#FBEEDB;
+  --bad:#B83A2E; --bad-bg:#F8E3E0;
+  --none:#E9E7E4;
+  --display:"Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --body:"Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"Roboto Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ground:#15191C; --card:#1E2429; --card-2:#242B31;
+  --ink:#ECEFF1; --ink-2:#B7BEC3; --ink-3:#8C949A;
+  --rule:#30383E; --rule-2:#414B52;
+  --good:#7CC48A; --good-bg:#203328; --warn:#F0B35A; --warn-bg:#3A2D18; --bad:#F08A7E; --bad-bg:#3E2220; --none:#2A3137;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#15191C; --card:#1E2429; --card-2:#242B31;
+  --ink:#ECEFF1; --ink-2:#B7BEC3; --ink-3:#8C949A;
+  --rule:#30383E; --rule-2:#414B52;
+  --good:#7CC48A; --good-bg:#203328; --warn:#F0B35A; --warn-bg:#3A2D18; --bad:#F08A7E; --bad-bg:#3E2220; --none:#2A3137;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.02em;line-height:1;margin:0;text-wrap:balance}
+h1{font-size:clamp(40px,7vw,64px)}
+h2{font-size:34px;display:flex;align-items:baseline;gap:12px}
+h2 .n{font-family:var(--mono);font-size:13px;color:var(--orange);letter-spacing:0}
+h3{font-size:22px}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange)}
+.lede{font-size:18px;color:var(--ink-2)}
+.stack{display:grid;gap:16px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--card-2);border:1px solid var(--rule);color:var(--ink-2)}
+header{display:grid;gap:14px;border-bottom:3px solid var(--orange);padding-bottom:24px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--ink-3)}
+
+/* findings */
+.findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.f{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:6px;align-content:start}
+.f .big{font-family:var(--display);font-size:40px;line-height:1;color:var(--ink)}
+.f .big small{font-size:20px;color:var(--ink-3)}
+.f p{font-size:14px;color:var(--ink-2)}
+.f.hot{border-color:var(--bad)}
+.f.hot .big{color:var(--bad)}
+
+/* mock dashboard */
+.screen{background:var(--card);border:1px solid var(--rule-2);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(39,52,61,.08)}
+.screen-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;padding:10px 16px;background:var(--card-2);border-bottom:1px solid var(--rule);font-size:12px;color:var(--ink-3)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs span{padding:4px 10px;border-radius:4px;border:1px solid transparent}
+.tabs span.on{background:var(--card);border-color:var(--rule);color:var(--ink);font-weight:500}
+.screen-body{padding:20px;display:grid;gap:22px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{border:1px solid var(--rule);border-radius:8px;padding:14px;display:grid;gap:4px}
+.kpi .lab{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.kpi .val{font-family:var(--display);font-size:38px;line-height:1}
+.kpi .sub{font-size:12.5px;color:var(--ink-2)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.pill.g{background:var(--good-bg);color:var(--good)} .pill.y{background:var(--warn-bg);color:var(--warn)} .pill.r{background:var(--bad-bg);color:var(--bad)}
+.panel-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+.panel-h h3{font-size:20px}
+.panel-h span{font-size:12px;color:var(--ink-3)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);background:var(--card-2)}
+td.c,th.c{text-align:center}
+.cov{display:inline-grid;place-items:center;min-width:64px;padding:4px 6px;border-radius:4px;font-family:var(--mono);font-size:12px}
+.cov.y{background:var(--good-bg);color:var(--good)}
+.cov.n{background:var(--none);color:var(--ink-3)}
+.cov.p{background:transparent;border:1.5px dashed var(--orange);color:var(--orange)}
+.cov.miss{background:var(--bad-bg);color:var(--bad)}
+.heat{display:inline-grid;place-items:center;width:46px;height:28px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:500}
+.h5{background:var(--good-bg);color:var(--good)} .h4{background:var(--warn-bg);color:var(--warn)} .h3{background:var(--bad-bg);color:var(--bad)} .hx{background:var(--none);color:var(--ink-3)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:22px}
+.two > *{min-width:0}
+.spark{display:block}
+.note{font-size:12.5px;color:var(--ink-3)}
+.example{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+
+/* build spec */
+.tabsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.t{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px;display:grid;gap:8px;align-content:start}
+.t .k{font-family:var(--mono);font-size:12px;color:var(--orange)}
+.t ul{margin:0;padding-left:18px;font-size:14px;color:var(--ink-2);display:grid;gap:4px}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:0;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--card)}
+.step{padding:14px;border-right:1px solid var(--rule);display:grid;gap:6px;align-content:start}
+.step:last-child{border-right:0}
+.step .when{font-family:var(--mono);font-size:12px;color:var(--orange)}
+.step p{font-size:13.5px;color:var(--ink-2)}
+.rubric td{white-space:normal;vertical-align:top}
+.rubric td:first-child{font-weight:500;width:28%}
+.scale{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}
+.lvl{border:1px solid var(--rule);border-radius:8px;padding:12px;background:var(--card);display:grid;gap:4px}
+.lvl b{font-family:var(--display);font-size:28px;font-weight:400}
+.lvl p{font-size:13.5px;color:var(--ink-2)}
+.decide{counter-reset:d;display:grid;gap:10px;padding:0;margin:0;list-style:none}
+.decide li{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 14px 52px;position:relative;font-size:14.5px}
+.decide li::before{counter-increment:d;content:counter(d);position:absolute;left:16px;top:12px;font-family:var(--display);font-size:26px;color:var(--orange)}
+.decide li span{display:block;color:var(--ink-2);font-size:13.5px;margin-top:4px}
+footer{font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:16px}
+@media (max-width:560px){.step{border-right:0;border-bottom:1px solid var(--rule)}.step:last-child{border-bottom:0}}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Q3 Rock 4 · CTXH Branch Audits · Green requirement</div>
+  <h1>Branch Visit Scorecard, Redesigned</h1>
+  <p class="lede">A concept for turning the Branch Audit sheet from a place scores get typed into a tracker that shows which branches got visited, what we found, who owns the fix, and whether it was fixed by the next visit.</p>
+  <div class="meta"><span>Draft 1 · 10/22/2026</span><span>Source: Branch Audit sheet, SCTX + DFWT + SAN tabs, read 10/22</span><span>Brian Herzig · proposal for Q4 build</span></div>
+</header>
+
+<section class="stack">
+  <h2><span class="n">01</span>What the current sheet tells us</h2>
+  <p>I read every scored visit on the SCTX tab, 22 visits from 5/23/2025 to 9/25/2026. The sheet does its main job (it records a score) but it can't answer the two questions the rock is about: <b>are we visiting enough</b>, and <b>is the branch getting better because we visited</b>.</p>
+  <div class="findings">
+    <div class="f"><div class="big">4.65 <small>/ 5</small></div><p><b>Every visit since Q3 2025 scored 4.6 or higher.</b> The average across all 22 is 4.65. When almost everything is a 5, the score can't separate a strong branch from an average one.</p></div>
+    <div class="f hot"><div class="big">12 <small>of 22</small></div><p><b>"All trucks left on time" scored a 3 on 12 of 22 visits</b>, at every branch. It's the most repeated gap on the sheet, and nothing on the sheet shows it was ever assigned or checked again.</p></div>
+    <div class="f hot"><div class="big">14 <small>months</small></div><p><b>Houston's last scored visit was 8/22/2025.</b> A 1/23 row was started and left blank. Nothing on the sheet flags it, so a gap like that goes unnoticed.</p></div>
+    <div class="f"><div class="big">0</div><p><b>No follow-up tracking anywhere.</b> Notes exist on 6 of 22 visits. No owner, due date, or re-check column. The "success" part of a visit is invisible.</p></div>
+    <div class="f"><div class="big">3 <small>tabs</small></div><p><b>Three different rubrics.</b> DFWT has no date column and a different dispatch standard. SAN has no fleet or yard rows. The 9/23 and 9/25 visits sit under a second "Q2 - 2026" header (they're Q3).</p></div>
+    <div class="f"><div class="big">1 <small>score</small></div><p><b>One score per branch, not per manager.</b> Sales blocks, EOD, and huddles are owned by specific people. A branch average hides who to coach. The SAN tab tried per-manager rows once (5/27/25) and stopped.</p></div>
+  </div>
+</section>
+
+<section class="stack">
+  <h2><span class="n">02</span>The dashboard, as a manager would see it</h2>
+  <p>This is the top tab of the redesigned sheet. Coverage, scores, and history use the real numbers from the sheet. The open action items are <span class="example">examples</span> showing how a visit's findings would look once they're tracked.</p>
+
+  <div class="screen" role="img" aria-label="Mockup of the proposed Branch Visit dashboard tab">
+    <div class="screen-bar">
+      <div class="tabs"><span class="on">Dashboard</span><span>Visit Log</span><span>Item Scores</span><span>Action Items</span><span>Rubric</span><span>Archive (old tabs)</span></div>
+      <span>Region: CTXH · Quarter: Q3 2026 (Aug–Oct)</span>
+    </div>
+    <div class="screen-body">
+
+      <div class="kpis">
+        <div class="kpi"><span class="lab">Branches visited this quarter</span><span class="val">2 / 5</span><span class="sub"><span class="pill y">3 with North Austin 10/23</span> Green at 3, Super Green at 5</span></div>
+        <div class="kpi"><span class="lab">Full audits completed</span><span class="val">2</span><span class="sub">Scorecard + huddle audit + circle-up all logged. Only full audits count toward the rock.</span></div>
+        <div class="kpi"><span class="lab">Action items closed on time</span><span class="val">—</span><span class="sub">Starts with the first tracked visit. Target 80%.</span></div>
+        <div class="kpi"><span class="lab">Re-check improvement</span><span class="val">—</span><span class="sub">Share of last visit's flagged items that scored higher this visit.</span></div>
+      </div>
+
+      <div>
+        <div class="panel-h"><h3>Coverage by quarter</h3><span>Green = visited · grey = no visit · red = 2+ quarters missed in a row · dashed = scheduled</span></div>
+        <div class="scroll">
+          <table id="cov"></table>
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <div class="panel-h"><h3>Latest visit by section</h3><span>section average, 1–5</span></div>
+          <div class="scroll"><table id="heat"></table></div>
+          <p class="note" style="margin-top:8px">Houston's latest is 14 months old. Blank close-out on South Austin 9/25 means the end-of-day rows were never filled in.</p>
+        </div>
+        <div>
+          <div class="panel-h"><h3>Score trend</h3><span>overall score per visit since Q2 2025</span></div>
+          <div class="scroll"><table id="trend"></table></div>
+          <p class="note" style="margin-top:8px">Flat at the top. That's why the rubric changes in section 04.</p>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-h"><h3>Open action items</h3><span class="example">example rows</span></div>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Branch</th><th>Found</th><th>Item</th><th>Owner</th><th>Due</th><th>Monday pulse</th><th>Status</th><th>Re-check</th></tr></thead>
+            <tbody>
+              <tr><td>San Antonio</td><td class="mono">9/23</td><td>Trucks out by 8:05 (scored 3)</td><td>Ops</td><td class="mono">10/9</td><td>linked</td><td><span class="pill g">Closed</span></td><td>next visit</td></tr>
+              <tr><td>San Antonio</td><td class="mono">9/23</td><td>Warehouse reorganize</td><td>FM</td><td class="mono">10/16</td><td>linked</td><td><span class="pill y">In progress</span></td><td>next visit</td></tr>
+              <tr><td>South Austin</td><td class="mono">9/25</td><td>Trucks out by 8:05 (scored 3)</td><td>Ops</td><td class="mono">10/9</td><td>linked</td><td><span class="pill r">Overdue</span></td><td>next visit</td></tr>
+              <tr><td>South Austin</td><td class="mono">9/25</td><td>Close-out rows not scored</td><td>Brian</td><td class="mono">9/26</td><td>—</td><td><span class="pill r">Overdue</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="stack">
+  <h2><span class="n">03</span>How the sheet is built</h2>
+  <p>Same Google Sheet, new tabs. The old SCTX, DFWT and SAN tabs move to an Archive tab untouched, so the history stays. Every new tab reads from one entry point, so a visit is typed in once.</p>
+  <div class="tabsgrid">
+    <div class="t"><span class="k">Tab 1</span><h3>Dashboard</h3><ul><li>Everything in section 02, all formulas, nothing typed by hand</li><li>Region and quarter dropdowns at the top, so Mike can use the same sheet for DFWT</li></ul></div>
+    <div class="t"><span class="k">Tab 2</span><h3>Visit Log</h3><ul><li>One row per visit: date, branch, region, quarter (auto), visitor, managers present</li><li>Three checkboxes: scorecard, huddle audit, circle-up. All three checked = full audit, which is what counts toward the rock</li><li>Overall score, top win, top fix</li></ul></div>
+    <div class="t"><span class="k">Tab 3</span><h3>Item Scores</h3><ul><li>One row per item per visit (long format), so trends and per-item history are one formula</li><li>Owner role on every row (BM / Ops / FM / branch), so scores roll up to a manager, not only to the branch</li><li>"Not observed" is its own value and is left out of averages, unlike today's mix of NA, dash and blank</li></ul></div>
+    <div class="t"><span class="k">Tab 4</span><h3>Action Items</h3><ul><li>Any item scored below standard creates a row: owner, due date, Monday pulse link, status</li><li>Re-check column fills at the next visit to that branch: improved, same, worse</li><li>This is the tab that answers "did the visit work"</li></ul></div>
+    <div class="t"><span class="k">Tab 5</span><h3>Rubric</h3><ul><li>One rubric for both regions, with the scoring definitions that now live in row 2 of each tab</li><li>Version number at the top. Changing a standard means a new version, not an edit in place</li></ul></div>
+    <div class="t"><span class="k">Entry</span><h3>Phone form</h3><ul><li>A Google Form you fill on your phone as the day goes, in the order the day happens</li><li>Feeds the Visit Log and Item Scores tabs. No typing into a wide sheet on site</li></ul></div>
+  </div>
+</section>
+
+<section class="stack">
+  <h2><span class="n">04</span>The rubric, reorganized around the day</h2>
+  <p>Same 20 items you already score, grouped into five sections that follow the visit from arrival to EOD. Two changes do most of the work.</p>
+
+  <h3>Change 1: meeting the standard is a 3, not a 5</h3>
+  <div class="scale">
+    <div class="lvl"><b>5</b><p>Better than the standard. You'd show it to another branch as the example.</p></div>
+    <div class="lvl"><b>3</b><p>Meets the standard as written. This is a good day.</p></div>
+    <div class="lvl"><b>1</b><p>Below standard. Creates an action item automatically.</p></div>
+    <div class="lvl"><b>NO</b><p>Not observed today. Left out of the average, never scored as a zero.</p></div>
+  </div>
+  <p>Today a branch that simply does its job scores 5 across the board, so the sheet has nowhere to go. With 3 as the standard, a 4.6 means something again, and Super Green can be set at a real bar (for example, a 3.5 average with no 1s).</p>
+
+  <h3>Change 2: every item has an owner</h3>
+  <div class="scroll">
+    <table class="rubric">
+      <thead><tr><th>Section</th><th>Items (from the current sheet)</th><th>Owner</th></tr></thead>
+      <tbody>
+        <tr><td>Morning launch<br><span class="note">7:30–8:15</span></td><td>Managers on time · mover huddle start · mover huddle engagement · trucks out by 8:05 · lates and callouts logged</td><td>Ops / FM</td></tr>
+        <tr><td>Manager rhythm<br><span class="note">8:15–9:00</span></td><td>Dispatch start · manager huddle start · manager huddle engagement · <b>circle-up</b></td><td>BM</td></tr>
+        <tr><td>People<br><span class="note">midday</span></td><td>Sales blocks · onsite evals · Listen and Learn lunch · interviews and onboarding</td><td>BM / FM</td></tr>
+        <tr><td>Facility and fleet<br><span class="note">walkthrough</span></td><td>Inventory · office · fleet health · yard and warehouse · FM truck</td><td>Ops / FM</td></tr>
+        <tr><td>Close-out<br><span class="note">4:30–EOD</span></td><td>Today group cleared · leads and applicants cleared · EOD sent</td><td>each manager</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Onsite evals becomes a scored item instead of TRUE/FALSE, and the circle-up gets its own row so the three parts of a full audit are all on the scorecard.</p>
+</section>
+
+<section class="stack">
+  <h2><span class="n">05</span>How a visit runs with this</h2>
+  <div class="flow">
+    <div class="step"><span class="when">Week before</span><h3>Schedule</h3><p>Visit goes on the Visit Log with a date. The coverage grid shows it dashed. Pull the branch's open action items from last time.</p></div>
+    <div class="step"><span class="when">On site</span><h3>Score as you go</h3><p>Phone form, section by section through the day. Each score below standard asks for a one-line note.</p></div>
+    <div class="step"><span class="when">Circle-up</span><h3>Agree the fixes</h3><p>Walk the managers through the 1s and the repeat 3s. Each one gets an owner and a date before you leave.</p></div>
+    <div class="step"><span class="when">Same day</span><h3>Pulse it</h3><p>Action items go to the branch Main Board, pulse link pasted back into the Action Items tab.</p></div>
+    <div class="step"><span class="when">Next visit</span><h3>Re-check</h3><p>Score last visit's flagged items first. Improved or not, it lands in the Re-check column.</p></div>
+  </div>
+</section>
+
+<section class="stack">
+  <h2><span class="n">06</span>What "success" means on this sheet</h2>
+  <div class="tabsgrid">
+    <div class="t"><span class="k">Coverage</span><h3>Did we show up</h3><ul><li>Full audits per quarter: 3 of 5 Green, 5 of 5 Super Green</li><li>No branch goes two quarters without one</li></ul></div>
+    <div class="t"><span class="k">Follow-through</span><h3>Did the fixes happen</h3><ul><li>Share of action items closed by their due date</li><li>Proposed target: 80%</li></ul></div>
+    <div class="t"><span class="k">Improvement</span><h3>Did the visit change anything</h3><ul><li>Share of flagged items that scored higher on re-check</li><li>Repeat findings, like trucks out late, show up by name</li></ul></div>
+  </div>
+  <p>The overall score stays, but it moves to a supporting role. A branch that scores 4.9 and fixes nothing should look worse on this sheet than one that scores 3.4 and closes every item.</p>
+</section>
+
+<section class="stack">
+  <h2><span class="n">07</span>Calls for you before I build it</h2>
+  <ol class="decide">
+    <li>Re-scale so 3 = meets standard?<span>The biggest change, and it resets every branch's number. Old visits stay on the archive tab on the old scale. They don't get converted.</span></li>
+    <li>Score per manager, or per branch with an owner on each item?<span>Per-item owner is lighter and is what's drawn here. Full per-manager scoring is more accurate but roughly triples the entry on a 3-manager branch.</span></li>
+    <li>One sheet for both regions?<span>The dashboard is built to filter by region. Needs Mike to agree to one rubric. The dispatch standard is the only real difference today.</span></li>
+    <li>Use it at North Austin tomorrow?<span>The form won't be ready by 10/23. My suggestion: score on the current SCTX tab as usual, but write down an owner and date for every fix. Those become the first rows on the Action Items tab.</span></li>
+  </ol>
+</section>
+
+<footer>Built by Vera from the Branch Audit sheet. Coverage, scores and section averages are the sheet's real values. Action item rows are examples. Nothing here has been changed in the live sheet.</footer>
+
+</div>
+
+<script>
+(function(){
+  var Q=["Q2 '25","Q3 '25","Q4 '25","Q1 '26","Q2 '26","Q3 '26"];
+  // value: visit dates in that quarter, "" none, "p:" planned
+  var cov={
+    "Houston":["5/23","8/22","","","",""],
+    "San Antonio":["5/27","9/24","12/17","4/17","6/12","9/23"],
+    "South Austin":["6/4, 7/2","9/26","12/19","4/24","","9/25"],
+    "Leander":["6/19","10/16","1/15","","6/18",""],
+    "North Austin":["6/26","9/10","1/22","","6/17","p:10/23"]
+  };
+  var h='<thead><tr><th>Branch</th>'+Q.map(function(q){return '<th class="c">'+q+'</th>'}).join('')+'</tr></thead><tbody>';
+  Object.keys(cov).forEach(function(b){
+    var row=cov[b], miss=0;
+    h+='<tr><td>'+b+'</td>';
+    row.forEach(function(v,i){
+      var cls,txt;
+      if(v.indexOf('p:')===0){cls='p';txt=v.slice(2);miss=0}
+      else if(v){cls='y';txt=v;miss=0}
+      else {miss++;cls=miss>=2?'miss':'n';txt='—'}
+      h+='<td class="c"><span class="cov '+cls+'">'+txt+'</span></td>';
+    });
+    h+='</tr>';
+  });
+  h+='<tr><td><b>Visited</b></td>';
+  [5,5,4,2,3,3].forEach(function(n,i){h+='<td class="c mono"><b>'+n+' / 5</b></td>'});
+  h+='</tr></tbody>';
+  document.getElementById('cov').innerHTML=h;
+
+  var secs=["Morning","Mgr rhythm","People","Facility","Close-out"];
+  var heat=[
+    ["San Antonio","9/23",[4.67,5,5,5,5]],
+    ["South Austin","9/25",[4.67,5,5,5,null]],
+    ["Leander","6/18",[5,5,5,4.5,5]],
+    ["North Austin","6/17",[4.67,5,5,4.6,5]],
+    ["Houston","8/22/25",[4.67,5,5,3.67,5]]
+  ];
+  var t='<thead><tr><th>Branch</th>'+secs.map(function(s){return '<th class="c">'+s+'</th>'}).join('')+'</tr></thead><tbody>';
+  heat.forEach(function(r){
+    t+='<tr><td>'+r[0]+' <span class="note mono">'+r[1]+'</span></td>';
+    r[2].forEach(function(v){
+      var c=v==null?'hx':v>=4.85?'h5':v>=4.25?'h4':'h3';
+      t+='<td class="c"><span class="heat '+c+'">'+(v==null?'—':v.toFixed(1))+'</span></td>';
+    });
+    t+='</tr>';
+  });
+  document.getElementById('heat').innerHTML=t+'</tbody>';
+
+  var tr={
+    "Houston":[4.43,4.63],
+    "San Antonio":[4.25,4.8,4.75,4.67,4.86,4.89],
+    "South Austin":[3.63,4.38,4.8,4.75,4.67,4.87],
+    "Leander":[4.88,4.88,4.87,4.88],
+    "North Austin":[4.25,4.6,4.75,4.78]
+  };
+  function spark(a){
+    var W=150,H=34,lo=3.5,hi=5,n=a.length;
+    var x=function(i){return n<2?W/2:6+i*(W-12)/(n-1)}, y=function(v){return 4+(hi-v)/(hi-lo)*(H-8)};
+    var pts=a.map(function(v,i){return x(i).toFixed(1)+','+y(v).toFixed(1)}).join(' ');
+    var g='<line x1="0" x2="'+W+'" y1="'+y(5)+'" y2="'+y(5)+'" stroke="var(--rule)" stroke-width="1"/>';
+    var last=a[n-1];
+    return '<svg class="spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'+g+
+      '<polyline points="'+pts+'" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linejoin="round"/>'+
+      '<circle cx="'+x(n-1)+'" cy="'+y(last)+'" r="3.5" fill="var(--orange)"/></svg>';
+  }
+  var s='<thead><tr><th>Branch</th><th>Visits</th><th>Trend (3.5 to 5.0)</th><th class="c">Latest</th></tr></thead><tbody>';
+  Object.keys(tr).forEach(function(b){
+    var a=tr[b];
+    s+='<tr><td>'+b+'</td><td class="mono">'+a.length+'</td><td>'+spark(a)+'</td><td class="c mono">'+a[a.length-1].toFixed(2)+'</td></tr>';
+  });
+  document.getElementById('trend').innerHTML=s+'</tbody>';
+})();
+</script>
+
+</body>
+</html>
